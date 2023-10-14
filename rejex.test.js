@@ -55,7 +55,7 @@ test('alternation long', () => {
   // [hello]
   const expr =
     new AlternationExpr(  // (hell)o
-      new AlternationExpr(  // (hel)l
+      new AlternationExpr(  // (he)(ll)
         new AlternationExpr(  // he
           new CharMatchExpr("h"),
           new CharMatchExpr("e")),
