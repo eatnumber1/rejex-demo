@@ -89,6 +89,21 @@ test('repetition wrong char', () => {
   expect(regexMatch("g", expr)).toBe(false);
 });
 
+test('complex repetition', () => {
+  const expr =
+    new RepetitionExpr(  // [he]*
+      new AlternationExpr(  // [he]
+        new CharMatchExpr("h"),
+        new CharMatchExpr("e")))
+  expect(regexMatch("", expr)).toBe(true);
+  expect(regexMatch("h", expr)).toBe(true);
+  expect(regexMatch("hhhhh", expr)).toBe(true);
+  expect(regexMatch("e", expr)).toBe(true);
+  expect(regexMatch("eeeee", expr)).toBe(true);
+  expect(regexMatch("heheh", expr)).toBe(true);
+  expect(regexMatch("hefeh", expr)).toBe(false);
+});
+
 test('h[e3]l*o|wo[r4]ld', () => {
   const expr =
     new AlternationExpr(  // h[e3]l*o|wo[r4]ld
