@@ -40,6 +40,17 @@ test('concat too much string', () => {
   expect(regexMatch("hel", expr)).toBe(false);
 });
 
+test('concat with repetition', () => {
+  const expr =
+    new ConcatExpr(  // he*
+      new CharMatchExpr("h"),
+      new RepetitionExpr(  // e*
+        new CharMatchExpr("e")))
+  expect(regexMatch("h", expr)).toBe(true);
+  expect(regexMatch("he", expr)).toBe(true);
+  expect(regexMatch("hee", expr)).toBe(true);
+});
+
 test('alternation short', () => {
   const expr =
     new AlternationExpr(  // [he]

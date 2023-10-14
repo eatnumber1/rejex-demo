@@ -74,9 +74,6 @@ export class ConcatExpr {
   // removed from the remaining_tokens list. Otherwise, the original tokens is
   // returned in remaining_tokens.
   match(tokens) {
-    // If there's less than 2 tokens, there's no match.
-    if (tokens.length < 2) return [false, tokens]
-
     // Try matching both the left and right subexpressions. Do it in order of
     // left first, then right, so we can allow the left expression to consume
     // tokens before we pass the remainder into the right.
