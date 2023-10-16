@@ -18,7 +18,7 @@
 //  - RepetitionExpr
 //
 // When given a tree of such objects, the regexMatch function below can tell
-// you if a given string does, or does not match the given regular expression
+// you if a given string does or does not match the given regular expression
 // object tree.
 //
 // A very simple example of this would be:
@@ -38,22 +38,21 @@ export class CharMatchExpr {
 
   // Match against a list of character tokens.
   //
-  // The return value is always a two-element list consisting of
-  // [is_match, remaining_tokens]. The first element is always a bool, and the
-  // second is always a list of tokens.
-  // If there is a match (is_match is true), the matching tokens will be
-  // removed from the remaining_tokens list. Otherwise, the original tokens is
-  // returned in remaining_tokens.
+  // The return value is always an object containing the fields `is_match` and
+  // `remaining`.  `is_match` is always a bool, and `remaining` second is
+  // always a list of tokens.  If there is a match (`is_match` is true), the
+  // matching tokens will be removed from the `remaining` list. Otherwise, the
+  // original tokens are returned in `remaining`.
   match(tokens) {
     // Split the tokens list into the first token, and a list containing
     // everything but the first.
     const [head, ...tail] = tokens
 
     // If the first token is not the character we're a matcher for, it's not a match.
-    if (head != this.chr) return [false, tokens]
+    if (head !== this.chr) return {is_match: false, remaining: tokens}
 
     // It's a match. Return the remaining (unmatched) tokens.
-    return [true, tail]
+    return {is_match: true, remaining: tail}
   }
 }
 
@@ -67,25 +66,24 @@ export class ConcatExpr {
 
   // Match against a list of character tokens.
   //
-  // The return value is always a two-element list consisting of
-  // [is_match, remaining_tokens]. The first element is always a bool, and the
-  // second is always a list of tokens.
-  // If there is a match (is_match is true), the matching tokens will be
-  // removed from the remaining_tokens list. Otherwise, the original tokens is
-  // returned in remaining_tokens.
+  // The return value is always an object containing the fields `is_match` and
+  // `remaining`.  `is_match` is always a bool, and `remaining` second is
+  // always a list of tokens.  If there is a match (`is_match` is true), the
+  // matching tokens will be removed from the `remaining` list. Otherwise, the
+  // original tokens are returned in `remaining`.
   match(tokens) {
     // Try matching both the left and right subexpressions. Do it in order of
     // left first, then right, so we can allow the left expression to consume
     // tokens before we pass the remainder into the right.
-    const [lhs_is_match, lhs_remainder] = this.lhs.match(tokens)
-    const [rhs_is_match, rhs_remainder] = this.rhs.match(lhs_remainder)
+    const lhs = this.lhs.match(tokens)
+    const rhs = this.rhs.match(lhs.remaining)
 
     // If either subexpressions didn't match, this expression does not match.
-    if (!lhs_is_match || !rhs_is_match) return [false, tokens]
+    if (!lhs.is_match || !rhs.is_match) return {is_match: false, remaining: tokens}
 
     // This expression is a match. Return the tokens remaining after both the
     // left and right subexpressions consume them.
-    return [true, rhs_remainder]
+    return {is_match: true, remaining: rhs.remaining}
   }
 }
 
@@ -99,36 +97,35 @@ export class AlternationExpr {
 
   // Match against a list of character tokens.
   //
-  // The return value is always a two-element list consisting of
-  // [is_match, remaining_tokens]. The first element is always a bool, and the
-  // second is always a list of tokens.
-  // If there is a match (is_match is true), the matching tokens will be
-  // removed from the remaining_tokens list. Otherwise, the original tokens is
-  // returned in remaining_tokens.
+  // The return value is always an object containing the fields `is_match` and
+  // `remaining`.  `is_match` is always a bool, and `remaining` second is
+  // always a list of tokens.  If there is a match (`is_match` is true), the
+  // matching tokens will be removed from the `remaining` list. Otherwise, the
+  // original tokens are returned in `remaining`.
   match(tokens) {
     // Try matching both the left and right subexpressions.
     //
     // Since there's no ordering to alternation (e.g. [ab] is equivalent to
     // [ba]), we don't pass the consumed tokens from the one side into the
     // other.
-    const [lhs_is_match, lhs_remainder] = this.lhs.match(tokens)
-    const [rhs_is_match, rhs_remainder] = this.rhs.match(tokens)
+    const lhs = this.lhs.match(tokens)
+    const rhs = this.rhs.match(tokens)
 
     // If either the left or the right matched, we match
-    if (lhs_is_match || rhs_is_match) {
-      // We can return either the lhs_remainder or the rhs_remainder. We
+    if (lhs.is_match || rhs.is_match) {
+      // We can return either the lhs.remaining or the rhs.remaining. We
       // choose to return the shorter of the two remainders. By doing so,
       // this expression "consumes" as much of the input as possible, and
       // therefore is considered "greedy".
-      let shorter_remainder = lhs_remainder
-      if (lhs_remainder.length > rhs_remainder.length) {
-        shorter_remainder = rhs_remainder
+      let shorter_remainder = lhs.remaining
+      if (lhs.remaining.length > rhs.remaining.length) {
+        shorter_remainder = rhs.remaining
       }
-      return [true, shorter_remainder]
+      return {is_match: true, remaining: shorter_remainder}
     }
 
     // There's no match.
-    return [false, tokens]
+    return {is_match: false, remaining: tokens}
   }
 }
 
@@ -141,22 +138,20 @@ export class RepetitionExpr {
 
   // Match against a list of character tokens.
   //
-  // The return value is always a two-element list consisting of
-  // [is_match, remaining_tokens]. The first element is always a bool, and the
-  // second is always a list of tokens.
-  // If there is a match (is_match is true), the matching tokens will be
-  // removed from the remaining_tokens list. Otherwise, the original tokens is
-  // returned in remaining_tokens.
+  // The return value is always an object containing the fields `is_match` and
+  // `remaining`.  `is_match` is always a bool, and `remaining` second is
+  // always a list of tokens.  If there is a match (`is_match` is true), the
+  // matching tokens will be removed from the `remaining` list. Otherwise, the
+  // original tokens are returned in `remaining`.
   match(tokens) {
-    let remainder = tokens
-    let is_match = true
+    let cur = {is_match: true, remaining: tokens}
     // Repetitively apply the subexpression until it doesn't match anymore.
-    while (is_match) {
-      [is_match, remainder] = this.expr.match(remainder)
+    while (cur.is_match) {
+      cur = this.expr.match(cur.remaining)
     }
     // Because RepetitionExpr is allowed to match zero times, we can never fail
     // to match. E.g. he*l matches the string hl
-    return [true, remainder]
+    return {is_match: true, remaining: cur.remaining}
   }
 }
 
@@ -164,9 +159,9 @@ export class RepetitionExpr {
 export function regexMatch(str, expr) {
   // Convert the string into an array of chars, then feed it into the top-level
   // expression.
-  const [is_match, remainder] = expr.match(str.split(''))
+  const m = expr.match(str.split(''))
   // If there's any unconsumed input, it's not a match.
-  if (remainder.length != 0) return false
-  return is_match
+  if (m.remaining.length !== 0) return false
+  return m.is_match
 }
 
