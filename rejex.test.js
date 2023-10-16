@@ -115,6 +115,23 @@ test('complex repetition', () => {
   expect(regexMatch("hefeh", expr)).toBe(false);
 });
 
+test('alternation is greedy', () => {
+  const expr =
+    new AlternationExpr(  // h*|el
+      new RepetitionExpr(  // h*
+        new CharMatchExpr("h")),
+      new ConcatExpr(  // el
+        new CharMatchExpr("e"),
+        new CharMatchExpr("l")))
+  expect(regexMatch("", expr)).toBe(true);
+  expect(regexMatch("hh", expr)).toBe(true);
+  expect(regexMatch("hhh", expr)).toBe(true);
+  expect(regexMatch("e", expr)).toBe(false);
+  expect(regexMatch("el", expr)).toBe(true);
+  expect(regexMatch("ell", expr)).toBe(false);
+  expect(regexMatch("ello", expr)).toBe(false);
+});
+
 test('h[e3]l*o|wo[r4]ld', () => {
   const expr =
     new AlternationExpr(  // h[e3]l*o|wo[r4]ld

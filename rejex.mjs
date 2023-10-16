@@ -114,10 +114,18 @@ export class AlternationExpr {
     const [lhs_is_match, lhs_remainder] = this.lhs.match(tokens)
     const [rhs_is_match, rhs_remainder] = this.rhs.match(tokens)
 
-    // If either the left or the right matched, we match, and return the
-    // left/right remainder.
-    if (lhs_is_match) return [true, lhs_remainder]
-    if (rhs_is_match) return [true, rhs_remainder]
+    // If either the left or the right matched, we match
+    if (lhs_is_match || rhs_is_match) {
+      // We can return either the lhs_remainder or the rhs_remainder. We
+      // choose to return the shorter of the two remainders. By doing so,
+      // this expression "consumes" as much of the input as possible, and
+      // therefore is considered "greedy".
+      let shorter_remainder = lhs_remainder
+      if (lhs_remainder.length > rhs_remainder.length) {
+        shorter_remainder = rhs_remainder
+      }
+      return [true, shorter_remainder]
+    }
 
     // There's no match.
     return [false, tokens]
