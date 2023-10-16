@@ -92,12 +92,8 @@ test('repetition short', () => {
   expect(regexMatch("hh", expr)).toBe(true);
   expect(regexMatch("hhh", expr)).toBe(true);
   expect(regexMatch("hhhh", expr)).toBe(true);
-});
-
-test('repetition wrong char', () => {
-  // h*
-  const expr = new RepetitionExpr(new CharMatchExpr("h"))
   expect(regexMatch("g", expr)).toBe(false);
+  expect(regexMatch("ghh", expr)).toBe(false);
 });
 
 test('complex repetition', () => {
@@ -167,3 +163,4 @@ test('h[e3]l*o|wo[r4]ld', () => {
   expect(regexMatch("worl", expr)).toBe(false);
   expect(regexMatch("hellllll", expr)).toBe(false);
 });
+
