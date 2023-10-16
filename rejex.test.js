@@ -167,3 +167,4 @@ test('h[e3]l*o|wo[r4]ld', () => {
   expect(regexMatch("worl", expr)).toBe(false);
   expect(regexMatch("hellllll", expr)).toBe(false);
 });
+
